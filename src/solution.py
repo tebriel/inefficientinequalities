@@ -5,7 +5,9 @@ Written by Chris Moultrie <chris@moultrie.org> @tebriel
 Available on Github at https://github.com/tebriel/inefficientinequalities
 This was a lot of fun, thanks.
 
-Usage: python solution.py
+Usage: python solution.py (will ask for input)
+       python solution.py "[string]"
+       python solution.py test
 """
 
 import sys
@@ -56,6 +58,14 @@ def reduce_list(versions):
         # Eliminate redundant operators for versions
         # This is horrifically gross and insecure, never ever ever ever ever
         # ever ever use this in production
+        
+        # Basically the idea here is, we can eval the ops given to us against
+        # these sorted arrays of numbers. Python is nice enough to sort arrays
+        # based on their individual contents, so [3,10,0] > [3,1,0]
+        # If these numbers cannot coexist from left to right in numerical
+        # order, things are no bueno. I have a vague sense that there's
+        # some edge case I'm not thinking of here, but I haven't been able to
+        # form one.
 
         to_eval = "%s%s%s" % (current[VER], following[OP], following[VER])
         first = eval(to_eval)
@@ -124,7 +134,10 @@ if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == 'test':
         do_tests()
     else:
-        input_string = raw_input('Enter Version String: ')
+        if len(sys.argv) > 1:
+            input_string = sys.argv[1]
+        else:
+            input_string = raw_input('Enter Version String: ')
         versionObjs = organize_and_sort(input_string)
         versions = reduce_list(versionObjs)
         print format_output(versions)
