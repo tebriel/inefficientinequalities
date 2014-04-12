@@ -32,7 +32,7 @@ def organize_and_sort(versions_string):
     versions_string = versions_string.strip()
     versions = versions_string.split(' ')
     versionObjs = [parse_version(version) for version in versions]
-    versionObjs = sorted(versionObjs, key=lambda version: version[1])
+    versionObjs = sorted(versionObjs, key=lambda version: version[VER])
     return versionObjs
 
 def reduce_list(versions):
