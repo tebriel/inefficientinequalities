@@ -9,7 +9,7 @@ programming languages and package managers. Here we challenge you to solve a
 real problem using a toy constraint language similar to (but not the same as!)
 Python's own.
 
-1. Let's define operators and versions in the following fashion:
+1) Let's define operators and versions in the following fashion:
 
 | Operators | Example Versions |
 |:---------:|:----------------:|
@@ -17,7 +17,7 @@ Python's own.
 | >= <=     | 4.7.0.3          |
 | == !=     | 2.10.5           |
 
-2. A Single inequality is expressed as <operator><value>.
+2) A Single inequality is expressed as <operator><value>.
 
 __Examples__
 
@@ -26,7 +26,7 @@ __Examples__
 *  ==3.14159265
 *  <23
 
-3. Gotchas:
+3) Gotchas:
 
 *  2.10 is not the same as 2.1 (2.10 > 2.1)
 *  3 == 3.0 and 3.0 == 3.0.0 (but 3.0.1 != 3.1)
