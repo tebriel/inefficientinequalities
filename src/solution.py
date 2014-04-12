@@ -8,6 +8,10 @@ This was a lot of fun, thanks.
 Usage: python solution.py
 """
 
+import sys
+
+OP, VER, OG = range(0,3)
+
 # Order is important here
 operators = ['==', '>=', '>', '<=', '<', '!=']
 
@@ -15,43 +19,114 @@ def parse_version(version):
     versionObj = {}
     for operator in operators:
         if version.startswith(operator):
-            versionObj['operator'] = operator
             numbers = version.lstrip(operator).split('.')
-            versionObj['numbers'] = [int(num) for num in numbers]
+            numbers = [int(num) for num in numbers]
+            versionObj = (operator, numbers, version)
             break
 
     return versionObj
 
 def organize_and_sort(versions_string):
+    # Kill whitespace WITH FIRE, WE didn't start it, but it was always
+    # burning...
+    versions_string = versions_string.strip()
     versions = versions_string.split(' ')
     versionObjs = [parse_version(version) for version in versions]
-    versionObjs = sorted(versionObjs, key=lambda version: version['numbers'])
+    versionObjs = sorted(versionObjs, key=lambda version: version[1])
     return versionObjs
 
 def reduce_list(versions):
+    # Safety Check
+    # we can check if we want to, we can leave those versions behind.
+    # 'cause your versions don't check and if they don't check well, they're
+    # no versions of mine
     if len(versions) <= 1:
         return versions
-    for index, version in enumerate(versions):
+
+    # Removing these from the list we're working on was a bad idea, the copy is
+    #   nicer
+    copy = [version for version in versions]
+
+    for index, current in enumerate(versions):
         # Out of range, bail
         if index+1 == len(versions):
             continue
+        following = versions[index+1]
+
         # Eliminate redundant operators for versions
-        cur_op = version['operator']
-        next_op = versions[index+1]['operator']
-        if cur_op == next_op:
-            del versions[index]
-            continue
-        elif '==' in [cur_op, next_op]:
-            return "unsatisfiable"
+        # This is horrifically gross and insecure, never ever ever ever ever
+        # ever ever use this in production
 
-    return versions
+        to_eval = "%s%s%s" % (current[VER], following[OP], following[VER])
+        first = eval(to_eval)
 
+        to_eval = "%s%s%s" % (following[VER], current[OP], current[VER])
+        second = eval(to_eval)
 
-inputs = ["<5.0.1 >=3.0", "<3.0 <3.1", ">2 >=2.1 <4 !=4.5", "<3.0 ==3.1"]
+        # If the second one is invalid, kill it
+        if first and not second:
+            copy.remove(following)
+        # If the first one is invalid, kill it
+        elif not first and second:
+            copy.remove(current)
+        # If neither are valid, kill both with fire
+        elif not first and not second:
+            copy.remove(current)
+            copy.remove(following)
+
+    return copy
+
+def format_output(versions):
+    """Reconstruct our new version string"""
+    output = ''
+    strings = []
+    if len(versions) == 0:
+        return "unsatisfiable"
+    for version in versions:
+        strings.append("%s%s" % (version[OP], '.'.join(map(str, version[VER]))))
+    return ' '.join(strings)
+
+def do_tests():
+    """Mini Test Harness, probably would've benefited from a real one..."""
+    # Testing START
+    inputs = [
+        "<5.0.1 >=3.0",
+        "<3.0 <3.1",
+        ">3.0 >3.1",
+        ">2 >=2.1 <4 !=4.5",
+        "<3.0 ==3.1",
+        ">2.10 >2.0",
+        ">3.0.0 >3 >3.0",
+    ]
+
+    results = [
+        ">=3.0 <5.0.1",
+        "<3.0",
+        ">3.1",
+        ">=2.1 <4",
+        "unsatisfiable",
+        ">2.10",
+        ">3.0.0",
+    ]
+
+    for index, input_string in enumerate(inputs):
+        versionObjs = organize_and_sort(input_string)
+        versions = reduce_list(versionObjs)
+        success = format_output(versions) == results[index]
+        if success:
+            print 'pass'
+        else:
+            print "%s --------> %s" % (input_string, format_output(versions))
+        
+    # Testing END
 
 if __name__ == "__main__":
-    #input_string = raw_input('Enter Version String: ')
-    # DEBUG
-    for input_string in inputs:
+    if len(sys.argv) > 1 and sys.argv[1] == 'test':
+        do_tests()
+    else:
+        input_string = raw_input('Enter Version String: ')
         versionObjs = organize_and_sort(input_string)
-        print reduce_list(versionObjs)
+        versions = reduce_list(versionObjs)
+        print format_output(versions)
+        sys.exit(0)
+
