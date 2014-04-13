@@ -47,7 +47,7 @@ is satsified,  >2 is always satisfied. !=4.5 can be omitted because it will
 always be true if <4 is satisfied. In other words, given >2 >=2.1 <4 !=4.5, the
 minimum list of equivalent inequalities is >=2.1 <4.
 
-Gotcha: The input may not stri tly be a subset of the output, e.g. ">3 !=3" is
+Gotcha: The input may not strictly be a subset of the output, e.g. ">3 !=3" is
 equivalent to ">3".
 
 Challenge: Write a program that reads a list of whitespace-separated
