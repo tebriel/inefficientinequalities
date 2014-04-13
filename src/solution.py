@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 Written by Chris Moultrie <chris@moultrie.org> @tebriel
@@ -11,6 +11,7 @@ Usage: python solution.py (will ask for input)
 """
 
 import sys
+from code import InteractiveConsole
 
 OP, VER, OG = range(0,3)
 
@@ -71,7 +72,7 @@ def reduce_list(versions):
         # Eliminate redundant operators for versions
         # This is horrifically gross and insecure, never ever ever ever ever
         # ever ever use this in production
-        
+
         # Basically the idea here is, we can eval the ops given to us against
         # these sorted arrays of numbers. Python is nice enough to sort arrays
         # based on their individual contents, so [3,10,0] > [3,1,0]
@@ -90,29 +91,25 @@ def reduce_list(versions):
 
         # If the second one is invalid, kill it
         if first and not second:
-            try:
+            if copy.count(following):
                 copy.remove(following)
-            except:
-                pass
         # If the first one is invalid, kill it
         elif not first and second:
-            try:
+            if copy.count(current):
                 copy.remove(current)
-            except:
-                pass
         # If neither are valid, kill both with fire
         elif not first and not second:
-            try:
+            if copy.count(current):
                 copy.remove(current)
-            except:
-                pass
-            try:
+            if copy.count(following):
                 copy.remove(following)
-            except:
-                pass
 
         # Catch that gosh darn >3 !=3
+        # But this breaks on >3 <3 and that makes me a sad panda
         if current_ver == following_ver:
+            allowed_left = ['>=', '>', '!=']
+            allowed_right = ['<=', '<', '!=']
+
             not_allowed = ['==','!=']
             if current[OP] not in not_allowed:
                 copy.append(current)
@@ -127,6 +124,7 @@ def format_output(versions):
     strings = []
     if len(versions) == 0:
         return "unsatisfiable"
+    versions = sorted(versions, key=lambda version: version[VER])
     for version in versions:
         strings.append("%s%s" % (version[OP], '.'.join(map(str, version[VER]))))
     return ' '.join(strings)
@@ -147,6 +145,18 @@ def do_tests():
         ">=2 <3 !=2.2",
         ">3.0 !=3",
         ">3 !=3.0",
+        # Begin Yury's Tests
+        '>=1.1 ==3',
+        '>=1.1 ==3.1.1 <=7.0.2',
+        '==3.1.1 <=7.0.2',
+        '==3.1.1',
+        '>=1.1 <=7.0.2 !=1.1 !=0.3',
+        '>=1.1 !=1.1 !=0.3 !=2',
+        '!=1.1 !=0.3 !=2',
+        '!=1.1 !=0.3 !=2 <=2 !=999.999',
+        '>7.7.1 <7.7.1',
+        '>1 !=1',
+        '>3 >=2.1 <=4.5 !=5.0',
     ]
 
     results = [
@@ -162,6 +172,18 @@ def do_tests():
         ">=2 !=2.2 <3",
         ">3.0",
         ">3",
+        # Begin Yury's Results
+        '==3',
+        '==3.1.1',
+        '==3.1.1',
+        '==3.1.1',
+        '!=1.1 >=1.1 <=7.0.2',
+        '!=1.1 >=1.1 !=2',
+        '!=0.3 !=1.1 !=2',
+        '!=0.3 !=1.1 !=2 <=2',
+        'unsatisfiable',
+        '>1',
+        '>3 <=4.5',
     ]
 
     for index, input_string in enumerate(inputs):
@@ -175,9 +197,10 @@ def do_tests():
 
         success = format_output(versions) == results[index]
         if success:
-            print 'pass'
+            print('pass')
         else:
-            print "%s --------> %s" % (input_string, format_output(versions))
+            print("Expected %s to be %s\n\tInstead got: %s\n" % (input_string,
+                results[index], format_output(versions)))
 
     # Testing END
 
@@ -188,7 +211,9 @@ if __name__ == "__main__":
         if len(sys.argv) > 1:
             input_string = sys.argv[1]
         else:
-            input_string = raw_input('Enter Version String: ')
+            prompt = 'Enter Version String: '
+            console = InteractiveConsole()
+            input_string = console.raw_input(prompt=prompt)
         previous_run = ''
         current_run = input_string
         while current_run not in [previous_run, 'unsatisfiable']:
@@ -196,6 +221,5 @@ if __name__ == "__main__":
             versionObjs = organize_and_sort(current_run)
             versions = reduce_list(versionObjs)
             current_run = format_output(versions)
-        print current_run
-        sys.exit(0)
+        print(current_run)
 
