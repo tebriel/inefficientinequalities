@@ -209,6 +209,8 @@ def do_tests():
         '>3 <=4.5',
     ]
 
+    successes = 0
+    failures = []
     for index, input_string in enumerate(inputs):
         previous_run = ''
         current_run = input_string
@@ -220,10 +222,16 @@ def do_tests():
 
         success = format_output(versions) == results[index]
         if success:
-            print('pass')
+            successes += 1
         else:
-            print("Expected %s to be %s\n\tInstead got: %s\n" % (input_string,
+            failures.append("\tExpected %s to be %s\n\t\tInstead got: %s\n" % (input_string,
                 results[index], format_output(versions)))
+
+    print("%s out of %s passing" % (successes, len(inputs)))
+    if len(failures):
+        print("Failures:")
+        for failure in failures:
+            print(failure)
 
     # Testing END
 
