@@ -107,8 +107,17 @@ def reduce_list(versions):
         # Catch that gosh darn >3 !=3
         # But this breaks on >3 <3 and that makes me a sad panda
         if current_ver == following_ver:
-            allowed_left = ['>=', '>', '!=']
-            allowed_right = ['<=', '<', '!=']
+            trouble = ['>', '<']
+            # Gross
+            if current[OP] in trouble and following[OP] in trouble:
+                curr_idx = trouble.index(current[OP])
+                follow_idx = trouble.index(following[OP])
+                if curr_idx != follow_idx:
+                    if copy.count(current):
+                        copy.remove(current)
+                    if copy.count(following):
+                        copy.remove(following)
+                    continue
 
             not_allowed = ['==','!=']
             if current[OP] not in not_allowed:
