@@ -107,23 +107,37 @@ def reduce_list(versions):
         # Catch that gosh darn >3 !=3
         # But this breaks on >3 <3 and that makes me a sad panda
         if current_ver == following_ver:
-            trouble = ['>', '<']
-            # Gross
-            if current[OP] in trouble and following[OP] in trouble:
-                curr_idx = trouble.index(current[OP])
-                follow_idx = trouble.index(following[OP])
-                if curr_idx != follow_idx:
-                    if copy.count(current):
-                        copy.remove(current)
-                    if copy.count(following):
-                        copy.remove(following)
-                    continue
+            result = handle_matching_version(current, following, copy)
 
-            not_allowed = ['==','!=']
-            if current[OP] not in not_allowed:
-                copy.append(current)
-            elif following[OP] not in not_allowed:
-                copy.append(following)
+    return copy
+
+def handle_matching_version(current, following, copy):
+    trouble = ['>', '<']
+    # Can't be both
+    if current[OP] in trouble and following[OP] in trouble:
+        curr_idx = trouble.index(current[OP])
+        follow_idx = trouble.index(following[OP])
+        if curr_idx != follow_idx:
+            if copy.count(current):
+                copy.remove(current)
+            if copy.count(following):
+                copy.remove(following)
+            return copy
+
+    not_allowed = ['==','!=']
+    allowed = ['>=', '<=']
+    if current[OP] not in not_allowed:
+        if current[OP] in allowed:
+            new_op = current[OP].replace('=','')
+            copy.append((new_op, current[VER], current[OG]))
+        else:
+            copy.append(current)
+    elif following[OP] not in not_allowed:
+        if following[OP] in allowed:
+            new_op = following[OP].replace('=','')
+            copy.append((new_op, following[VER], following[OG]))
+        else:
+            copy.append(following)
 
     return copy
 
@@ -186,10 +200,10 @@ def do_tests():
         '==3.1.1',
         '==3.1.1',
         '==3.1.1',
-        '!=1.1 >=1.1 <=7.0.2',
-        '!=1.1 >=1.1 !=2',
+        '>1.1 <=7.0.2',
+        '>1.1 !=2',
         '!=0.3 !=1.1 !=2',
-        '!=0.3 !=1.1 !=2 <=2',
+        '!=0.3 !=1.1 <2',
         'unsatisfiable',
         '>1',
         '>3 <=4.5',
