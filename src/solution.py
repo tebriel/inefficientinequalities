@@ -84,6 +84,14 @@ def reduce_list(versions):
             copy.remove(current)
             copy.remove(following)
 
+        # Catch that gosh darn >3 !=3
+        if current[VER] == following[VER]:
+            not_allowed = ['==','!=']
+            if current[OP] not in not_allowed:
+                copy.append(current)
+            elif following[OP] not in not_allowed:
+                copy.append(following)
+
     return copy
 
 def format_output(versions):
@@ -107,6 +115,9 @@ def do_tests():
         "<3.0 ==3.1",
         ">2.10 >2.0",
         ">3.0.0 >3 >3.0",
+        ">3 !=3",
+        "!=3 >3",
+        ">=2 <3 !=2.2",
     ]
 
     results = [
@@ -117,6 +128,9 @@ def do_tests():
         "unsatisfiable",
         ">2.10",
         ">3.0.0",
+        ">3",
+        ">3",
+        ">=2 !=2.2 <3",
     ]
 
     for index, input_string in enumerate(inputs):
