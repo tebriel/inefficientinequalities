@@ -27,6 +27,19 @@ def parse_version(version):
             break
 
     return versionObj
+def strip_zeros(numbers):
+    result = numbers
+    zero_index = -1
+    for index, num in enumerate(reversed(numbers)):
+        if num == 0:
+            zero_index = index
+        else:
+            break
+    if zero_index > -1:
+        result = numbers[:(zero_index+1)*-1]
+
+    return result
+
 
 def organize_and_sort(versions_string):
     # Kill whitespace WITH FIRE, WE didn't start it, but it was always
@@ -66,26 +79,40 @@ def reduce_list(versions):
         # order, things are no bueno. I have a vague sense that there's
         # some edge case I'm not thinking of here, but I haven't been able to
         # form one.
+        following_ver = strip_zeros(following[VER])
+        current_ver = strip_zeros(current[VER])
 
-        to_eval = "%s%s%s" % (current[VER], following[OP], following[VER])
-        first = eval(to_eval)
+        to_eval_first = "%s%s%s" % (current_ver, following[OP], following_ver)
+        first = eval(to_eval_first)
 
-        to_eval = "%s%s%s" % (following[VER], current[OP], current[VER])
-        second = eval(to_eval)
+        to_eval_second = "%s%s%s" % (following_ver, current[OP], current_ver)
+        second = eval(to_eval_second)
 
         # If the second one is invalid, kill it
         if first and not second:
-            copy.remove(following)
+            try:
+                copy.remove(following)
+            except:
+                pass
         # If the first one is invalid, kill it
         elif not first and second:
-            copy.remove(current)
+            try:
+                copy.remove(current)
+            except:
+                pass
         # If neither are valid, kill both with fire
         elif not first and not second:
-            copy.remove(current)
-            copy.remove(following)
+            try:
+                copy.remove(current)
+            except:
+                pass
+            try:
+                copy.remove(following)
+            except:
+                pass
 
         # Catch that gosh darn >3 !=3
-        if current[VER] == following[VER]:
+        if current_ver == following_ver:
             not_allowed = ['==','!=']
             if current[OP] not in not_allowed:
                 copy.append(current)
@@ -118,6 +145,8 @@ def do_tests():
         ">3 !=3",
         "!=3 >3",
         ">=2 <3 !=2.2",
+        ">3.0 !=3",
+        ">3 !=3.0",
     ]
 
     results = [
@@ -127,21 +156,29 @@ def do_tests():
         ">=2.1 <4",
         "unsatisfiable",
         ">2.10",
-        ">3.0.0",
+        ">3",
         ">3",
         ">3",
         ">=2 !=2.2 <3",
+        ">3.0",
+        ">3",
     ]
 
     for index, input_string in enumerate(inputs):
-        versionObjs = organize_and_sort(input_string)
-        versions = reduce_list(versionObjs)
+        previous_run = ''
+        current_run = input_string
+        while current_run not in [previous_run, 'unsatisfiable']:
+            previous_run = current_run
+            versionObjs = organize_and_sort(current_run)
+            versions = reduce_list(versionObjs)
+            current_run = format_output(versions)
+
         success = format_output(versions) == results[index]
         if success:
             print 'pass'
         else:
             print "%s --------> %s" % (input_string, format_output(versions))
-        
+
     # Testing END
 
 if __name__ == "__main__":
@@ -152,8 +189,13 @@ if __name__ == "__main__":
             input_string = sys.argv[1]
         else:
             input_string = raw_input('Enter Version String: ')
-        versionObjs = organize_and_sort(input_string)
-        versions = reduce_list(versionObjs)
-        print format_output(versions)
+        previous_run = ''
+        current_run = input_string
+        while current_run not in [previous_run, 'unsatisfiable']:
+            previous_run = current_run
+            versionObjs = organize_and_sort(current_run)
+            versions = reduce_list(versionObjs)
+            current_run = format_output(versions)
+        print current_run
         sys.exit(0)
 
